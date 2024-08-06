@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cake Selection Experiment</title>
+    <script src="https://unpkg.com/jspsych@8.0.0"></script>
+
+    <!---
+    <script type="text/javascript" src="js/jspsych-6.0.5/jspsych.js"></script>-->
+
+    <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.0.0"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.0.0"></script>
+
+    <script src="https://unpkg.com/@jspsych/plugin-preload@2.0.0"></script>
+    <link href="https://unpkg.com/jspsych@8.0.0/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <style>
+        .cake-selection {
+            display: flex;
+            justify-content: center;
+            margin: 20px;
+        }
+        .cake {
+            margin: 0 10px;
+            cursor: pointer;
+        }
+        .customer-image {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+
+<script>
+// Initialize JsPsych
+
+// Run the experiment
+const jsPsych = initJsPsych({
+    on_finish: function() {
+        jsPsych.data.displayData();
+    }
+});
+
+// Preload images
+const preload = {
+    type: jsPsychPreload,
+    images: [
+        'images/cake1.jpg', 
+        'images/cake2.jpg', 
+        'images/cake3.jpg',
+        'images/customer1.jpg',
+        'images/customer2.jpg',
+        'images/customer3.jpg',
+        'images/customer4.jpg'
+    ]
+};
+
+// Function to generate random feedback
+function randomFeedback() {
+    const responses = ["Positive", "Negative"];
+    return responses[Math.floor(Math.random() * responses.length)];
+}
+
+// Function to create a cake selection trial
+function createCakeSelectionTrial(customerImage) {
+    return {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: `<div class='customer-image'><img src='${customerImage}' alt='Customer' width='150'></div>`,
+        choices: [
+            "<img src='images/cake1.jpg' class='cake' alt='Cake 1' width='100'>",
+            "<img src='images/cake2.jpg' class='cake' alt='Cake 2' width='100'>",
+            "<img src='images/cake3.jpg' class='cake' alt='Cake 3' width='100'>"
+        ],
+        prompt: "<p>Select a cake for the customer:</p>",
+        on_finish: function(data) {
+            data.choice = data.response;
+            data.feedback = randomFeedback();
+        }
+    };
+}
+
+// Function to create a feedback trial
+function createFeedbackTrial() {
+    return {
+        type: jsPsychHtmlKeyboardResponse,
+        stimulus: function() {
+            const lastTrialData = jsPsych.data.get().last(1).values()[0];
+            return `<p>The customer response was: <strong>${lastTrialData.feedback}</strong></p>`;
+        },
+        choices: [' '],
+        prompt: "<p>Press space to continue.</p>"
+    };
+}
+
+// Define a list of customer images for the trials
+const customerImages = [
+    'images/customer1.jpg',
+    'images/customer2.jpg',
+    'images/customer3.jpg',
+    'images/customer4.jpg'
+];
+
+// Create the full experiment timeline
+let timeline = [preload];
+
+customerImages.forEach(customerImage => {
+    timeline.push(createCakeSelectionTrial(customerImage));
+    timeline.push(createFeedbackTrial());
+});
+
+jsPsych.run(timeline);
+
+</script>
+</body>
+</html>
